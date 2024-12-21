@@ -14,6 +14,7 @@ import { ProfileService } from "../../services/profile.service";
 import { AsyncPipe, NgIf } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FollowButtonComponent } from "../../components/follow-button.component";
+import { mockUser } from '../../mock-data';
 
 @Component({
   selector: "app-profile-page",
@@ -33,6 +34,7 @@ export class ProfileComponent implements OnInit {
   profile!: Profile;
   isUser: boolean = false;
   destroyRef = inject(DestroyRef);
+  errorMessage: string = ''; 
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -41,23 +43,34 @@ export class ProfileComponent implements OnInit {
     private readonly profileService: ProfileService,
   ) {}
 
-  ngOnInit() { // You need to modify this for Task 3
-    this.profileService
-      .get(this.route.snapshot.params["username"])
-      .pipe(
-        // catchError((error) => {
-        //   void this.router.navigate(["/"]);
-        //   return throwError(() => error);
-        // }),
-        switchMap((profile) => {
-          return combineLatest([of(profile), this.userService.currentUser]);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe(([profile, user]) => {
-        this.profile = profile;
-        this.isUser = profile.username === user?.username;
-      });
+  ngOnInit() {
+    const username = this.route.snapshot.params["username"];
+
+    if (username === "mockuser") {
+      this.profile = mockUser; 
+      this.isUser = false; 
+    } else {
+      this.profileService
+        .get(username)
+        .pipe(
+          switchMap((profile) => {
+            return combineLatest([of(profile), this.userService.currentUser]);
+          }),
+          takeUntilDestroyed(this.destroyRef),
+          catchError((error) => {
+            console.error('Error fetching profile data:', error);
+            this.errorMessage = 'Sorry, we couldn’t fetch the profile data. Please try again later.';
+            this.router.navigate(['/']); 
+            return throwError(() => error);
+          })
+        )
+        .subscribe(
+          ([profile, user]) => {
+            this.profile = profile;
+            this.isUser = profile.username === user?.username;
+          }
+        );
+    }
   }
 
   onToggleFollowing(profile: Profile) {
