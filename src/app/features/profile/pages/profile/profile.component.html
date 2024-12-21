@@ -1,4 +1,4 @@
-@if (profile) {
+<div *ngIf="profile; else loadingOrError">
   <div class="profile-page">
     <div class="user-info">
       <div class="container">
@@ -7,20 +7,22 @@
             <img [src]="profile.image" class="user-img" />
             <h4>{{ profile.username }}</h4>
             <p>{{ profile.bio }}</p>
-            @if (!isUser) {
+            
+            <ng-container *ngIf="!isUser">
               <app-follow-button
                 [profile]="profile"
                 (toggle)="onToggleFollowing($event)"
-              />
-            }
-            @if (isUser) {
+              ></app-follow-button>
+            </ng-container>
+            
+            <ng-container *ngIf="isUser">
               <a
                 [routerLink]="['/settings']"
                 class="btn btn-sm btn-outline-secondary action-btn"
               >
                 <i class="ion-gear-a"></i> Edit Profile Settings
               </a>
-            }
+            </ng-container>
           </div>
         </div>
       </div>
@@ -59,4 +61,11 @@
       </div>
     </div>
   </div>
-}
+</div>
+
+<ng-template #loadingOrError>
+  <div class="loading">
+    <p *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p *ngIf="!errorMessage">Loading profile...</p>
+  </div>
+</ng-template>
