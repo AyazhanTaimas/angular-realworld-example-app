@@ -11,6 +11,7 @@ import { ListErrorsComponent } from "../../shared/components/list-errors.compone
 import { Errors } from "../models/errors.model";
 import { UserService } from "./services/user.service";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { User } from "../../core/auth/user.model";
 
 interface AuthForm {
   email: FormControl<string>;
@@ -63,29 +64,21 @@ export default class AuthComponent implements OnInit {
     }
   }
 
-  submitForm(): void { // you need this for Task 2
+  submitForm(): void {
     this.isSubmitting = true;
     this.errors = { errors: {} };
 
-    let observable =
-      this.authType === "login"
-        ? this.userService.login(
-            this.authForm.value as { email: string; password: string },
-          )
-        : this.userService.register(
-            this.authForm.value as {
-              email: string;
-              password: string;
-              username: string;
-            },
-          );
+    const mockUser: User = {
+      username: 'testUser',
+      email: 'testuser@example.com',
+      token: 'mockToken',
+      bio: 'This is a test user bio',
+      image: 'https://example.com/profile.jpg', 
+    };
 
-    observable.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => void this.router.navigate(["/"]),
-      error: (err) => {
-        this.errors = err;
-        this.isSubmitting = false;
-      },
-    });
+    this.userService.loginMock(mockUser);
+
+    this.router.navigate(['/']);
   }
 }
+
